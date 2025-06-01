@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stripe + Wise Cost Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+        input, label { display: block; margin: 10px 0; width: 100%; font-size: 16px; }
+        input[type="number"] { padding: 8px; }
+        button { padding: 10px; font-size: 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .result, .details, .comparison { margin-top: 20px; font-size: 18px; font-weight: bold; }
+        .details small { display: block; font-weight: normal; font-size: 16px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<h2>Stripe + Wise Cost Calculator</h2>
+
+<label for="amountToReceive">Amount Deposited to US Bank Account (USD):</label>
+<input type="number" id="amountToReceive" value="500" step="0.01">
+
+<label for="wiseFee">Wise Transfer Fee (USD):</label>
+<input type="number" id="wiseFee" value="1.5" step="0.01">
+
+<label for="stripePercent">Stripe Fee (%) (Include intl card fee):</label>
+<input type="number" id="stripePercent" value="3.9" step="0.01">
+
+<label for="stripeFixed">Stripe Fixed Fee (USD):</label>
+<input type="number" id="stripeFixed" value="0.3" step="0.01">
+
+<label for="exchangeRate">TTD to USD Exchange Rate (for your reference):</label>
+<input type="number" id="exchangeRate" value="7.2" step="0.01">
+
+<hr>
+
+<label for="ttdCharged">TTD Amount You Are Charging on Your Credit Card:</label>
+<input type="number" id="ttdCharged" value="3800" step="0.01">
+
+<button onclick="calculate()">Calculate</button>
+
+<div class="result" id="resultBox"></div>
+<div class="details" id="detailsBox"></div>
+
+<script>
+function calculate() {
+    var amountToReceive = parseFloat(document.getElementById("amountToReceive").value);
+    var wiseFee = parseFloat(document.getElementById("wiseFee").value);
+    var stripePercent = parseFloat(document.getElementById("stripePercent").value);
+    var stripeFixed = parseFloat(document.getElementById("stripeFixed").value);
+    var exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
+    var ttdCharged = parseFloat(document.getElementById("ttdCharged").value);
+
+    var totalNeededFromStripe = amountToReceive + wiseFee;
+    var grossCharge = (totalNeededFromStripe + stripeFixed) / (1 - (stripePercent / 100));
+    var ttdEquivalent = grossCharge * exchangeRate;
+
+    var stripeConvertedUSD = ttdCharged / exchangeRate;
+    var margin = stripeConvertedUSD - grossCharge;
+
+    document.getElementById("resultBox").innerHTML =
+        "<strong>USD to Charge via Stripe:</strong> $" + grossCharge.toFixed(2) +
+        "<br><strong>TTD to Load on Your Card:</strong> $" + ttdEquivalent.toFixed(2);
+
+    document.getElementById("detailsBox").innerHTML =
+        "<small>Breakdown:</small>" +
+        "<small>- Stripe needs to send to Wise: USD $" + totalNeededFromStripe.toFixed(2) + "</small>" +
+        "<small>- Wise fee: USD $" + wiseFee.toFixed(2) + "</small>" +
+        "<small>- Final amount friend receives: USD $" + amountToReceive.toFixed(2) + "</small>" +
+        "<br><br><strong>Stripe will receive after FX:</strong> USD $" + stripeConvertedUSD.toFixed(2) +
+        "<br><strong>DIFFERENCE:</strong> USD $" + margin.toFixed(2) +
+        "<br><strong style='color:" + (margin >= 0 ? "green" : "red") + "'>" +
+        (margin >= 0 ? "✅ TTD amount is enough to meet the USD target." : "❌ TTD amount is NOT enough. Increase the card charge.") +
+        "</strong>";
+}
+</script>
+
+</body>
+</html>
